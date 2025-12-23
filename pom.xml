@@ -34,7 +34,7 @@
     <!-- Ensure Sonar can find compiled classes -->
     <sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
   </properties>
-
+<packaging>war</packaging>
   <dependencies>
     <!-- Spring Boot web -->
     <dependency>
