@@ -30,6 +30,7 @@ pipeline {
             }
         }
 
+
 stage('Deploy to Tomcat') {
   steps {
     withCredentials([usernamePassword(credentialsId: 'tomcat-manager-creds',
@@ -38,7 +39,6 @@ stage('Deploy to Tomcat') {
       sh '''
         set -e
 
-        # Find the first WAR produced by the build
         WAR=$(ls -1 target/*.war 2>/dev/null | head -n 1 || true)
         if [ -z "$WAR" ]; then
           echo "WAR not found in target/. Did the build succeed and is packaging=war?" >&2
