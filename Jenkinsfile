@@ -29,30 +29,32 @@ pipeline {
                     sh "mvn test"
             }
         }
-         stage('Deploy to Tomcat') {
-      steps {
-        // Add Jenkins credentials (Kind: Username with password)
-        // ID must be 'tomcat-manager-creds' or change below accordingly.
-        withCredentials([usernamePassword(credentialsId: 'tomcat-manager-creds',
-                                          usernameVariable: 'TM_USER',
-                                          passwordVariable: 'TM_PASS')]) {
-          sh '''
-            set -e
-            WAR=target/*.war
-            if [ ! -f $WAR ]; then
-              echo "WAR not found. Build step failed?" >&2
-              exit 2
-            fi
 
-            echo "Deploying $WAR to http://${TOMCAT_HOST}:${TOMCAT_PORT}${APP_PATH} ..."
-            curl --fail -u "$TM_USER:$TM_PASS" -T "$WAR" \
-              "http://${TOMCAT_HOST}:${TOMCAT_PORT}/manager/text/deploy?path=${APP_PATH}&update=true"
+stage('Deploy to Tomcat') {
+  steps {
+    withCredentials([usernamePassword(credentialsId: 'tomcat-manager-creds',
+                                      usernameVariable: 'TM_USER',
+                                      passwordVariable: 'TM_PASS')]) {
+      sh '''
+        set -e
 
-            echo "✅ Deploy OK: http://${TOMCAT_HOST}:${TOMCAT_PORT}${APP_PATH}"
-          '''
-        }
-      }
+        # Find the first WAR produced by the build
+        WAR=$(ls -1 target/*.war 2>/dev/null | head -n 1 || true)
+        if [ -z "$WAR" ]; then
+          echo "WAR not found in target/. Did the build succeed and is packaging=war?" >&2
+          ls -la target || true
+          exit 2
+        fi
+
+        echo "Deploying $WAR to http://${TOMCAT_HOST}:${TOMCAT_PORT}${APP_PATH} ..."
+        curl --fail -u "$TM_USER:$TM_PASS" -T "$WAR" \
+          "http://${TOMCAT_HOST}:${TOMCAT_PORT}/manager/text/deploy?path=${APP_PATH}&update=true"
+
+        echo "✅ Deploy OK: http://${TOMCAT_HOST}:${TOMCAT_PORT}${APP_PATH}"
+      '''
     }
+  }
+}
   }
 
   post {
