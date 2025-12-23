@@ -35,6 +35,7 @@
     <sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
   </properties>
 <packaging>war</packaging>
+<finalName>spring-boot-web</finalName
   <dependencies>
     <!-- Spring Boot web -->
     <dependency>
