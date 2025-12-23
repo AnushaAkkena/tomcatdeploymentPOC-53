@@ -1,16 +1,21 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
+  <!-- Basic coordinates -->
   <modelVersion>4.0.0</modelVersion>
-
   <groupId>com.abhishek</groupId>
   <artifactId>spring-boot-demo</artifactId>
   <version>1.0</version>
   <name>spring-boot-demo</name>
 
+  <!-- Packaging: WAR for external Tomcat -->
+  <packaging>war</packaging>
+
+  <!-- Spring Boot parent -->
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
@@ -18,6 +23,7 @@
     <relativePath/> <!-- lookup parent from repository -->
   </parent>
 
+  <!-- Properties -->
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <java.version>11</java.version>
@@ -34,23 +40,23 @@
     <!-- Ensure Sonar can find compiled classes -->
     <sonar.java.binaries>${project.basedir}/target/classes</sonar.java.binaries>
   </properties>
-<packaging>war</packaging>
-<finalName>spring-boot-web</finalName
+
+  <!-- Dependencies -->
   <dependencies>
     <!-- Spring Boot web -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
     </dependency>
-    
-<dependency>
-  <groupId>org.springframework.boot</groupId>
-  <artifactId>spring-boot-starter-tomcat</artifactId>
-  <scope>provided</scope>
-</dependency>
 
+    <!-- Use the container's Tomcat (external), not embedded -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+      <scope>provided</scope>
+    </dependency>
 
-    <!-- Thymeleaf -->
+    <!-- Thymeleaf (optional if you use templates) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-thymeleaf</artifactId>
@@ -63,7 +69,7 @@
       <scope>test</scope>
     </dependency>
 
-    <!-- Devtools (optional) -->
+    <!-- Devtools (optional; do not use in production) -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-devtools</artifactId>
@@ -71,18 +77,19 @@
     </dependency>
   </dependencies>
 
+  <!-- Build -->
   <build>
+    <!-- WAR name placed in target/spring-boot-web.war -->
     <finalName>spring-boot-web</finalName>
 
     <plugins>
-
-      <!-- Spring Boot -->
+      <!-- Spring Boot plugin -->
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
 
-      <!-- Compiler -->
+      <!-- Java compiler -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -140,7 +147,6 @@
         <artifactId>sonar-maven-plugin</artifactId>
         <version>3.10.0.2594</version>
       </plugin>
-
     </plugins>
   </build>
 </project>
