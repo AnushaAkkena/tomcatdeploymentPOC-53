@@ -1,0 +1,89 @@
+pipeline {
+    agent any
+    
+    tools {
+        //jdk 'jdk11'
+        maven 'maven3'
+    }
+    
+    environment {
+        SONAR_HOST_URL = 'http://13.236.148.80:9000/'
+        SONAR_AUTH_TOKEN = credentials('sonarqube')
+        NVD_API_KEY           = credentials('NVD_API_KEY')
+        DOCKERHUB_REPO = "anushaakkena/trivyproject"
+
+    }
+
+    stages {
+        stage('Git Checkout ') {
+            steps {
+                git url: 'https://github.com/AnushaAkkena/POC-6.git', branch: 'main'
+            }
+        }
+        
+        stage('Build') {
+            steps {
+                    sh "mvn clean package"
+            }
+        }
+        
+        stage('Run Test Cases') {
+            steps {
+                    sh "mvn test"
+            }
+        }
+        
+        stage('Sonarqube Analysis') {
+            steps {
+                     sh '''
+                    mvn sonar:sonar \
+                      -Dsonar.projectKey=spring-boot-demo \
+                      -Dsonar.host.url=$SONAR_HOST_URL \
+                      -Dsonar.login=$SONAR_AUTH_TOKEN
+                '''
+                }
+            }
+        
+      stage('OWASP Dependency-Check') {
+            steps {
+                dependencyCheck additionalArguments: "--scan . --format HTML --nvdApiKey ${env.NVD_API_KEY}", odcInstallation: 'DP'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                archiveArtifacts artifacts: 'dependency-check-report.html, **/dependency-check-report.xml', allowEmptyArchive: true
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                sh 'docker build -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} .'
+            }
+        }
+
+     stage('Trivy Image Scan') {
+            steps {
+                // Scans the local image created in the previous stage
+                sh """
+                    trivy image \
+                      --severity HIGH,CRITICAL \
+                      --no-progress \
+                      ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                """
+            }
+        }
+ stage('Login and Push to DockerHub') {
+            steps { 
+                withCredentials([usernamePassword(credentialsId: 'dockerhub_creds', passwordVariable: 'PASSWORD', usernameVariable: 'USERNAME')]) { 
+                    sh "echo ${PASSWORD} | docker login -u ${USERNAME} --password-stdin"
+                    sh "docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+                }
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                // Use --rm or a specific name to avoid container name conflicts on re-runs
+                sh "docker run -d -p 8181:8080 ${DOCKERHUB_REPO}:${BUILD_NUMBER}"
+            }
+        }
+        
+    }
+}
